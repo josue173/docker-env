@@ -1,19 +1,21 @@
 # version: '3'
 
 services:
+  # SERVICIO PARA USAR UNA BASE DE DATOS
   db:
     container_name: ${MONGO_DB_NAME}
     image: mongo:6.0
     volumes:
       - poke-vol:/data/db
     # ports:
-      # - 27017:27017 # No se expone por razones de seguridad
+    # - 27017:27017 # No se expone por razones de seguridad
     restart: always
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
-    command: ['--auth']
-  
+    command: ["--auth"]
+
+  # SERVICIO PARA REVISAR LA BASE DE DATOS
   mongo-express:
     depends_on:
       - db
@@ -27,6 +29,20 @@ services:
     ports:
       - 8080:8081
     restart: always
+
+  # APLICACIÓN
+  poke-app:
+    depends_on:
+      - db
+      - mongo-express
+    image: klerith/pokemon-nest-app:1.0.0
+    ports:
+      - 3000:3000
+    environment:
+      MONGODB: mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@${MONGO_DB_NAME}:27017
+      DB_NAME: ${MONGO_DB_NAME}
+    restart: always
+
 
 volumes:
   poke-vol:
